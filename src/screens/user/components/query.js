@@ -11,14 +11,8 @@ function useSetState(initialState) {
   return [state, setState]
 }
 
-function Query({query, variables, children, normalize = data => data}) {
-  const client = useContext(GitHub.Context)
-  const [state, setState] = useSetState({
-    loaded: false,
-    fetching: false,
-    data: null,
-    error: null,
-  })
+function useSafeSetState(initialState) {
+  const [state, setState] = useSetState(initialState)
 
   const mountedRef = useRef(false)
   useEffect(() => {
@@ -26,6 +20,18 @@ function Query({query, variables, children, normalize = data => data}) {
     return () => (mountedRef.current = false)
   }, [])
   const safeSetState = (...args) => mountedRef.current && setState(...args)
+
+  return [state, safeSetState]
+}
+
+function Query({query, variables, children, normalize = data => data}) {
+  const client = useContext(GitHub.Context)
+  const [state, setState] = useSafeSetState({
+    loaded: false,
+    fetching: false,
+    data: null,
+    error: null,
+  })
 
   useEffect(() => {
     if (isEqual(previousInputs.current, [query, variables])) {
@@ -35,7 +41,7 @@ function Query({query, variables, children, normalize = data => data}) {
     client
       .request(query, variables)
       .then(res =>
-        safeSetState({
+        setState({
           data: normalize(res),
           error: null,
           loaded: true,
@@ -43,7 +49,7 @@ function Query({query, variables, children, normalize = data => data}) {
         }),
       )
       .catch(error =>
-        safeSetState({
+        setState({
           error,
           data: null,
           loaded: false,
