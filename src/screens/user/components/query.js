@@ -4,11 +4,10 @@ import isEqual from 'lodash/isEqual'
 import * as GitHub from '../../../github-client'
 
 function useSetState(initialState) {
-  const [state, setState] = useReducer(
+  return useReducer(
     (state, newState) => ({...state, ...newState}),
     initialState,
   )
-  return [state, setState]
 }
 
 function useSafeSetState(initialState) {
