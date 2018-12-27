@@ -33,11 +33,12 @@ function usePrevious(value) {
 }
 
 function useDeepCompareEffect(callback, inputs) {
+  const cleanupRef = useRef()
   useEffect(() => {
-    if (isEqual(previousInputs, inputs)) {
-      return
+    if (!isEqual(previousInputs, inputs)) {
+      cleanupRef.current = callback()
     }
-    callback()
+    return cleanupRef.current
   })
   const previousInputs = usePrevious(inputs)
 }
