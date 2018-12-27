@@ -43,7 +43,7 @@ function useDeepCompareEffect(callback, inputs) {
   const previousInputs = usePrevious(inputs)
 }
 
-function Query({query, variables, children, normalize = data => data}) {
+function useQuery({query, variables, normalize = data => data}) {
   const client = useContext(GitHub.Context)
   const [state, setState] = useSafeSetState({
     loaded: false,
@@ -77,8 +77,10 @@ function Query({query, variables, children, normalize = data => data}) {
     [query, variables],
   )
 
-  return children(state)
+  return state
 }
+
+const Query = ({children, ...props}) => children(useQuery(props))
 
 Query.propTypes = {
   query: PropTypes.string.isRequired,
@@ -88,3 +90,4 @@ Query.propTypes = {
 }
 
 export default Query
+export {useQuery}
