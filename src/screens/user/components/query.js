@@ -3,12 +3,22 @@ import PropTypes from 'prop-types'
 import isEqual from 'lodash/isEqual'
 import * as GitHub from '../../../github-client'
 
-function Query({query, variables, children, normalize = data => data}) {
-  const client = useContext(GitHub.Context)
+function useSetState(initialState) {
   const [state, setState] = useReducer(
     (state, newState) => ({...state, ...newState}),
-    {loaded: false, fetching: false, data: null, error: null},
+    initialState,
   )
+  return [state, setState]
+}
+
+function Query({query, variables, children, normalize = data => data}) {
+  const client = useContext(GitHub.Context)
+  const [state, setState] = useSetState({
+    loaded: false,
+    fetching: false,
+    data: null,
+    error: null,
+  })
 
   const mountedRef = useRef(false)
   useEffect(() => {
