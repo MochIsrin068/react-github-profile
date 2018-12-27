@@ -32,6 +32,16 @@ function usePrevious(value) {
   return ref.current
 }
 
+function useDeepCompareEffect(callback, inputs) {
+  useEffect(() => {
+    if (isEqual(previousInputs, inputs)) {
+      return
+    }
+    callback()
+  })
+  const previousInputs = usePrevious(inputs)
+}
+
 function Query({query, variables, children, normalize = data => data}) {
   const client = useContext(GitHub.Context)
   const [state, setState] = useSafeSetState({
@@ -41,32 +51,30 @@ function Query({query, variables, children, normalize = data => data}) {
     error: null,
   })
 
-  useEffect(() => {
-    if (isEqual(previousInputs, [query, variables])) {
-      return
-    }
-    setState({fetching: true})
-    client
-      .request(query, variables)
-      .then(res =>
-        setState({
-          data: normalize(res),
-          error: null,
-          loaded: true,
-          fetching: false,
-        }),
-      )
-      .catch(error =>
-        setState({
-          error,
-          data: null,
-          loaded: false,
-          fetching: false,
-        }),
-      )
-  })
-
-  const previousInputs = usePrevious([query, variables])
+  useDeepCompareEffect(
+    () => {
+      setState({fetching: true})
+      client
+        .request(query, variables)
+        .then(res =>
+          setState({
+            data: normalize(res),
+            error: null,
+            loaded: true,
+            fetching: false,
+          }),
+        )
+        .catch(error =>
+          setState({
+            error,
+            data: null,
+            loaded: false,
+            fetching: false,
+          }),
+        )
+    },
+    [query, variables],
+  )
 
   return children(state)
 }
